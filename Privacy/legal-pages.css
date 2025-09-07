@@ -1,0 +1,140 @@
+.legal-container {
+    max-width: 800px;
+    padding: 2rem;
+    min-height: auto;
+    justify-content: flex-start;
+}
+
+.nav-links {
+    margin-top: 1rem;
+    display: flex;
+    gap: 1.5rem;
+    justify-content: center;
+}
+
+.nav-links a {
+    color: #cccccc;
+    text-decoration: none;
+    font-size: 0.9rem;
+    transition: color 0.3s ease;
+}
+
+.nav-links a:hover {
+    color: #ffffff;
+}
+
+.legal-content {
+    text-align: left;
+    margin: 3rem 0;
+    line-height: 1.6;
+}
+
+.legal-content h1 {
+    font-size: 2.5rem;
+    margin-bottom: 0.5rem;
+    text-align: center;
+    background: linear-gradient(45deg, #ffffff, #cccccc);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.last-updated {
+    text-align: center;
+    color: #888888;
+    font-size: 0.9rem;
+    margin-bottom: 2rem;
+}
+
+.legal-content section {
+    margin-bottom: 2rem;
+}
+
+.legal-content h2 {
+    font-size: 1.4rem;
+    margin-bottom: 1rem;
+    color: #ffffff;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding-bottom: 0.5rem;
+}
+
+.legal-content p {
+    margin-bottom: 1rem;
+    color: #cccccc;
+}
+
+.legal-content ul {
+    margin: 1rem 0;
+    padding-left: 2rem;
+}
+
+.legal-content li {
+    margin-bottom: 0.5rem;
+    color: #cccccc;
+}
+
+.legal-content a {
+    color: #ffffff;
+    text-decoration: underline;
+}
+
+.legal-content a:hover {
+    color: #f0f0f0;
+}
+
+.footer-links {
+    margin-top: 0.5rem;
+    display: flex;
+    gap: 1.5rem;
+    justify-content: center;
+}
+
+.footer-links a {
+    color: #888888;
+    text-decoration: none;
+    font-size: 0.8rem;
+    transition: color 0.3s ease;
+}
+
+.footer-links a:hover {
+    color: #cccccc;
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+    .legal-container {
+        padding: 1.5rem;
+    }
+    
+    .legal-content h1 {
+        font-size: 2rem;
+    }
+    
+    .nav-links {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .footer-links {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .legal-container {
+        padding: 1rem;
+    }
+    
+    .legal-content h1 {
+        font-size: 1.8rem;
+    }
+    
+    .legal-content h2 {
+        font-size: 1.2rem;
+    }
+    
+    .legal-content ul {
+        padding-left: 1.5rem;
+    }
+}
