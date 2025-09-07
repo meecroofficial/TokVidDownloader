@@ -7,45 +7,67 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // URL validation function
     function isValidTikTokUrl(url) {
-        const tikTokRegex = /^https?:\/\/(www\.)?(tiktok\.com|vm\.tiktok\.com|lite\.tiktok\.com|m\.tiktok\.com|vt\.tiktok\.com|tiktoklite\.com)/;
+        const tikTokRegex = /^https?:\/\/(www\.)?(tiktok\.com|vm\.tiktok\.com|m\.tiktok\.com|vt\.tiktok\.com)/;
         return tikTokRegex.test(url);
     }
 
-    // Convert TikTok Lite URLs to standard format
-    async function convertLiteUrl(url) {
-        try {
-            // Handle different Lite URL formats
-            if (url.includes('lite.tiktok.com') || url.includes('tiktoklite.com')) {
-                // Try to resolve redirect to get actual TikTok URL
-                const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
-                const response = await fetch(proxyUrl, {
-                    headers: {
-                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-                    }
-                });
+    // Resolve short TikTok URLs to full URLs
+    async function resolveShortUrl(url) {
+        // Check if it's a vm.tiktok.com short URL
+        if (url.includes('vm.tiktok.com')) {
+            try {
+                // Use redirect service to get final URL
+                const redirectApis = [
+                    `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
+                    `https://corsproxy.io/?${encodeURIComponent(url)}`,
+                    `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`
+                ];
                 
-                if (response.ok) {
-                    const data = await response.json();
-                    // Look for canonical URL or redirect URL in response
-                    const content = data.contents;
-                    const canonicalMatch = content.match(/canonical.*?href=["'](.*?)["']/i);
-                    const redirectMatch = content.match(/window\.location\.href\s*=\s*["'](.*?)["']/i);
-                    
-                    if (canonicalMatch && canonicalMatch[1].includes('tiktok.com')) {
-                        return canonicalMatch[1];
-                    }
-                    if (redirectMatch && redirectMatch[1].includes('tiktok.com')) {
-                        return redirectMatch[1];
+                for (let apiUrl of redirectApis) {
+                    try {
+                        const response = await fetch(apiUrl, {
+                            method: 'HEAD',
+                            redirect: 'follow'
+                        });
+                        
+                        // Get the final URL after redirects
+                        const finalUrl = response.url;
+                        if (finalUrl && finalUrl.includes('tiktok.com/') && !finalUrl.includes('vm.tiktok.com')) {
+                            return finalUrl;
+                        }
+                    } catch (e) {
+                        continue;
                     }
                 }
+                
+                // Alternative method: try to extract from HTML
+                try {
+                    const htmlResponse = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(url)}`);
+                    const data = await htmlResponse.json();
+                    const content = data.contents;
+                    
+                    // Look for canonical URL or meta refresh
+                    const patterns = [
+                        /canonical.*?href=["'](https:\/\/[^"']*tiktok\.com[^"']*)["']/i,
+                        /property=["']og:url["'].*?content=["'](https:\/\/[^"']*tiktok\.com[^"']*)["']/i,
+                        /http-equiv=["']refresh["'].*?url=(https:\/\/[^"']*tiktok\.com[^"']*)/i
+                    ];
+                    
+                    for (let pattern of patterns) {
+                        const match = content.match(pattern);
+                        if (match && match[1]) {
+                            return match[1];
+                        }
+                    }
+                } catch (e) {
+                    // Continue to return original URL
+                }
+            } catch (error) {
+                console.log('Short URL resolution failed:', error);
             }
-            
-            // If no conversion needed or failed, return original
-            return url;
-        } catch (error) {
-            console.log('URL conversion failed, using original:', error);
-            return url;
         }
+        
+        return url;
     }
 
     // Show status message with loading animation
@@ -77,41 +99,25 @@ document.addEventListener('DOMContentLoaded', function() {
         downloadResult.className = 'download-result show';
     }
 
-    // Fetch TikTok video data using CORS proxy with Lite support
+    // Fetch TikTok video data with short URL support
     async function fetchTikTokVideo(originalUrl, quality) {
-        // First, try to convert Lite URLs
-        const convertedUrl = await convertLiteUrl(originalUrl);
+        // First, resolve short URLs to full URLs
+        const resolvedUrl = await resolveShortUrl(originalUrl);
         
         const apis = [
-            {
-                url: `https://api.allorigins.win/get?url=${encodeURIComponent(`https://tikwm.com/api/?url=${encodeURIComponent(convertedUrl)}&hd=${quality === 'HD' ? '1' : '0'}`)}`,
-                headers: { 'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 14_0 like Mac OS X) AppleWebKit/605.1.15' }
-            },
-            {
-                url: `https://corsproxy.io/?${encodeURIComponent(`https://tikwm.com/api/?url=${encodeURIComponent(convertedUrl)}&hd=${quality === 'HD' ? '1' : '0'}`)}`,
-                headers: { 'User-Agent': 'Mozilla/5.0 (Android 10; Mobile; rv:91.0) Gecko/91.0 Firefox/91.0' }
-            },
-            {
-                url: `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(`https://tikwm.com/api/?url=${encodeURIComponent(convertedUrl)}&hd=${quality === 'HD' ? '1' : '0'}`)}`,
-                headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' }
-            }
+            `https://api.allorigins.win/get?url=${encodeURIComponent(`https://tikwm.com/api/?url=${encodeURIComponent(resolvedUrl)}&hd=${quality === 'HD' ? '1' : '0'}`)}`,
+            `https://corsproxy.io/?${encodeURIComponent(`https://tikwm.com/api/?url=${encodeURIComponent(resolvedUrl)}&hd=${quality === 'HD' ? '1' : '0'}`)}`,
+            `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(`https://tikwm.com/api/?url=${encodeURIComponent(resolvedUrl)}&hd=${quality === 'HD' ? '1' : '0'}`)}`
         ];
         
-        // If original URL was different from converted, also try original
-        if (originalUrl !== convertedUrl) {
-            apis.push({
-                url: `https://api.allorigins.win/get?url=${encodeURIComponent(`https://tikwm.com/api/?url=${encodeURIComponent(originalUrl)}&hd=${quality === 'HD' ? '1' : '0'}`)}`,
-                headers: { 'User-Agent': 'TikTok/1.0 (iPhone; iOS 14.0; Scale/3.00)' }
-            });
+        // If original URL was different from resolved, also try original
+        if (originalUrl !== resolvedUrl) {
+            apis.push(`https://api.allorigins.win/get?url=${encodeURIComponent(`https://tikwm.com/api/?url=${encodeURIComponent(originalUrl)}&hd=${quality === 'HD' ? '1' : '0'}`)}`);
         }
         
-        for (let api of apis) {
+        for (let apiUrl of apis) {
             try {
-                const response = await fetch(api.url, {
-                    headers: api.headers,
-                    redirect: 'follow'
-                });
-                
+                const response = await fetch(apiUrl);
                 if (!response.ok) continue;
                 
                 let data = await response.json();
@@ -144,7 +150,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
         
-        return { success: false, error: 'Unable to process video. Please try a different link or check if the video is public.' };
+        return { success: false, error: 'Unable to process video. Please check if the link is valid and the video is public.' };
     }
 
     // Handle download process
