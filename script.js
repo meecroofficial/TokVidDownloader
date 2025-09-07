@@ -5,6 +5,13 @@ document.addEventListener('DOMContentLoaded', function() {
     const statusMessage = document.getElementById('status');
     const downloadResult = document.getElementById('downloadResult');
 
+    // Extract TikTok URL from text (removes extra text from TikTok Lite)
+    function extractTikTokUrl(text) {
+        const urlRegex = /https?:\/\/(www\.)?(tiktok\.com|vm\.tiktok\.com|m\.tiktok\.com|vt\.tiktok\.com)[^\s]*/i;
+        const match = text.match(urlRegex);
+        return match ? match[0] : text.trim();
+    }
+
     // URL validation function
     function isValidTikTokUrl(url) {
         const tikTokRegex = /^https?:\/\/(www\.)?(tiktok\.com|vm\.tiktok\.com|m\.tiktok\.com|vt\.tiktok\.com)/;
@@ -155,17 +162,23 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Handle download process
     async function handleDownload(quality) {
-        const url = urlInput.value.trim();
+        const inputText = urlInput.value.trim();
         
-        if (!url) {
+        if (!inputText) {
             showStatus('Please enter a TikTok video URL', 'error');
             return;
         }
+        
+        // Extract clean URL from input text
+        const url = extractTikTokUrl(inputText);
         
         if (!isValidTikTokUrl(url)) {
             showStatus('Please enter a valid TikTok URL', 'error');
             return;
         }
+        
+        // Update input field with clean URL
+        urlInput.value = url;
         
         // Clear previous results
         clearResults();
