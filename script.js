@@ -7,7 +7,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // URL validation function
     function isValidTikTokUrl(url) {
-        const tikTokRegex = /^https?:\/\/(www\.)?(tiktok\.com|vm\.tiktok\.com)/;
+        const tikTokRegex = /^https?:\/\/(www\.)?(tiktok\.com|vm\.tiktok\.com|lite\.tiktok\.com|m\.tiktok\.com|vt\.tiktok\.com)/;
         return tikTokRegex.test(url);
     }
 
